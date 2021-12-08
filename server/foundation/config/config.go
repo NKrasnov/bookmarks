@@ -1,5 +1,32 @@
-//config package provides basic app configuration capabilities
-//through command line parameters and environment variables
+/*
+config package provides basic app configuration capabilities
+through command line parameters and environment variables
+
+App configuration struct
+ tags description
+ cmd     - command line parameter name
+ env     - environment variable name
+ default - default value for the parameter.
+           command line parameters take precedence over environment variables
+ usage   - short description
+
+ Example:
+
+	cfg := struct{
+		Host 	string `param:"cmd=host,env=APP_HOST,default=127.0.0.1,usage=hostname or IP"`
+		Port 	int	   `param:"cmd=port,env=APP_PORT,default=8080,usage=posrt the server will listen to"`
+		Timeout int    `param:"cmd=timeout,env=APP_TIMEOUT,default=10,usage=server read timeout"`
+	}{}
+
+	// Parse function parses command line parameters into the cfg struct
+	cfg, err := config.Parse(&cfg, os.Args)
+
+
+	---------------------------
+
+	TODO
+	- ability to specify units of time in timeouts. For example 10s, 20ms, 1h, 2m, instead of plain digits 10, 20, 30
+*/
 package config
 
 import (
@@ -25,8 +52,8 @@ var (
 	ErrInvalidConfigStruct   = errors.New("config sruct expected to be a pointer")
 )
 
-// tagParam describes configuration parameter
-type CMDPram struct {
+// CMDParam describes configuration parameter
+type CMDParam struct {
 	FieldName string
 	FieldType string
 	EnvName   string
@@ -34,7 +61,7 @@ type CMDPram struct {
 	Usage     string
 }
 
-var commands map[string]CMDPram
+var commands map[string]CMDParam
 
 func PrintUsage() {
 
@@ -55,7 +82,7 @@ func Parse(cfgStruct interface{}, params []string) error {
 
 	tagName := "param"
 
-	commands = map[string]CMDPram{}
+	commands = map[string]CMDParam{}
 
 	t := reflect.ValueOf(cfgStruct)
 
@@ -88,7 +115,7 @@ func Parse(cfgStruct interface{}, params []string) error {
 				return cmds["default"]
 			}
 
-			commands[cmd] = CMDPram{
+			commands[cmd] = CMDParam{
 				FieldName: field.Name,
 				Value:     val(),
 				EnvName:   env,
@@ -118,7 +145,7 @@ func Parse(cfgStruct interface{}, params []string) error {
 			} else {
 				f.SetString(v.Value)
 			}
-		case reflect.Int:
+		case reflect.Int, reflect.Int64:
 			//parse int first
 			var val string
 			if cmdOK {
