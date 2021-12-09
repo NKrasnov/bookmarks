@@ -2,9 +2,9 @@
 
 case $1 in
     run)
-        go run ./server/application/bm-api
+        go run ./server/app/bm-api
     ;;
     build)
-        go build -o . ./server/application/bm-api
+        go build -o . ./server/app/bm-api
     ;;
 esac
